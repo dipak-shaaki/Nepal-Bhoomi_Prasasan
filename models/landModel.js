@@ -33,12 +33,14 @@ const landSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: false,
+      required: function () { return this.isForSale; }
     },
+
     isForSale: {
       type: Boolean,
       default: false, // Default false; will be updated when selling
     },
+    
     buyer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

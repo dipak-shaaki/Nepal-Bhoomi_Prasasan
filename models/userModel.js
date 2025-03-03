@@ -7,17 +7,17 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: {
     type: String,
-    enum: ['buyer', 'seller', 'government', 'admin'],
-    default: 'buyer', // Default role
+    enum: ['user', 'government', 'admin'],
+    default: 'user', // Default role
   },
 }, { timestamps: true });
 
 // Method to switch between Buyer & Seller
 userSchema.methods.switchRole = function () {
-  if (this.role === 'buyer') {
+  if (this.role === 'user') {
     this.role = 'seller';
   } else if (this.role === 'seller') {
-    this.role = 'buyer';
+    this.role = 'user';
   }
 };
 

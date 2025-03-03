@@ -1,6 +1,8 @@
 // controllers/landController.js
 const Land = require('../models/landModel');
 const convertToSquareMeter = require('../utils/convertToSqMeters');
+const { calculateTax } = require('../utils/taxCalculator');
+
 
 // @desc Register new land (Requires Admin Approval)
 // @route POST /api/land/register
@@ -60,20 +62,25 @@ const approveLand = async (req, res) => {
     const land = await Land.findById(req.params.id);
 
     if (!land) {
-      return res.status(404).json({ message: 'Land not found' });
+      return res.status(404).json({ message: "Land not found" });
     }
 
-    if (req.user.role !== 'admin' && req.user.role !== 'government') {
-      return res.status(403).json({ message: 'Unauthorized action' });
-    }
+    // Check if the user is an admin
+   // Check if the user is an admin
+   if (req.user.role !== 'admin' && req.user.role !== 'government') {
+    return res.status(403).json({ message: 'Unauthorized action: Only admins/government officials can approve land' });
+  }
 
-    land.status = 'Approved';
-    await land.save();
-    res.status(200).json({ message: 'Land approved successfully', land });
+  land.status = 'Approved';
+  await land.save();
+
+
+    res.status(200).json({ message: "Land approved successfully", land });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // @desc Request Land Edit (User Request)
 // @route PUT /api/land/edit/:id
@@ -143,54 +150,70 @@ const sellLand = async (req, res) => {
     }
 
     if (land.owner.toString() !== req.user.id) {
-      return res.status(403).json({ message: 'Unauthorized action' });
-    }
-
-    if (land.status !== 'Approved') {
-      return res.status(400).json({ message: 'Land must be approved before selling' });
+      return res.status(403).json({ message: 'You can only sell your own land' });
     }
 
     land.isForSale = true;
     land.status = 'For Sale';
-    land.transactionStatus = 'Available';
-
     await land.save();
+
     res.status(200).json({ message: 'Land listed for sale successfully', land });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // @desc Buy land
 // @route PUT /api/land/buy/:id
 // @access Private (Only Authenticated Users)
 const buyLand = async (req, res) => {
   try {
-    const land = await Land.findById(req.params.id);
+    const land = await Land.findById(req.params.id).populate('owner');
+    const buyer = await User.findById(req.user.id);
 
-    if (!land) {
-      return res.status(404).json({ message: 'Land not found' });
+    if (!land || !buyer) {
+      return res.status(404).json({ message: 'Land or Buyer not found' });
     }
 
-    if (land.status !== 'For Sale' || !land.isForSale) {
-      return res.status(400).json({ message: 'Land is not available for sale' });
+    if (!land.isForSale) {
+      return res.status(400).json({ message: 'Land is not for sale' });
     }
 
-    if (land.owner.toString() === req.user.id) {
-      return res.status(400).json({ message: 'You cannot buy your own land' });
+    if (land.owner._id.toString() === buyer._id.toString()) {
+      return res.status(403).json({ message: 'You cannot buy your own land' });
     }
 
-    land.buyer = req.user.id;
-    land.owner = req.user.id;
+    // Calculate tax
+    const taxAmount = calculateTax(land.price);
+    const totalCost = land.price + taxAmount;
+
+    if (buyer.balance < totalCost) {
+      return res.status(400).json({ message: 'Insufficient funds' });
+    }
+
+    // Deduct balance & transfer ownership
+    buyer.balance -= totalCost;
+    seller.balance += land.price; 
+    land.owner = buyer._id;
     land.status = 'Sold';
     land.isForSale = false;
+    land.buyer = buyer._id;
     land.transactionStatus = 'Completed';
 
+    await buyer.save();
+    await seller.save();
+    // await land.owner.save();
     await land.save();
-    res.status(200).json({ message: 'Land purchased successfully', land });
+
+    res.status(200).json({
+      message: 'Land purchased successfully',
+      land,
+      taxPaid: taxAmount,
+      finalAmountPaid: totalCost,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 module.exports = { registerLand, approveLand, requestLandEdit, approveLandEdit ,sellLand, buyLand}; 

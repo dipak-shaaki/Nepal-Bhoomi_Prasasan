@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { registerLand, approveLand, requestLandEdit, approveLandEdit,sellLand, buyLand } = require('../controllers/landController');
 const protect = require('../middleware/authMiddleware');const authorize = require('../middleware/roleMiddleware');
+const isAuthorized=require('../middleware/authMiddleware')
 
 
 // Register land (Only authenticated users)

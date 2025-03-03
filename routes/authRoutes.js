@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { registerUser, loginUser, getUserProfile,switchRole } = require('../controllers/authController');
-const protect = require('../middleware/authMiddleware');
+const protect = require('../middleware/authMiddleware'); 
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/profile', protect, getUserProfile);
-router.put('/switch-role', protect, switchRole);
+router.post('/register', registerUser); // Register a new user
+router.post('/login', loginUser);// Login a user
+router.get('/profile', protect, getUserProfile); // Get user profile
+router.put('/switch-role', protect, switchRole); // Switch between buyer and seller
 
 module.exports = router;

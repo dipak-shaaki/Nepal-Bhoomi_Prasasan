@@ -172,6 +172,8 @@ land demo
 demo tests
 register and login
 
+
+A
 {
   "name": "Ram Bahadur",
   "email": "ram@example.com",
@@ -179,13 +181,44 @@ register and login
   "role": "user"
 }
 
+user A token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzNkZjc5MDQxZDA0MzBhNzIyZmY5MiIsInJvbGUiOiJidXllciIsImlhdCI6MTc0MTAxNjU4NSwiZXhwIjoxNzQzNjA4NTg1fQ.lsRPg4MpAK9Hec020qPCw5WFD6OAlETYrS2SlVv5U0E
 
 
-token :"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzNkZjc5MDQxZDA0MzBhNzIyZmY5MiIsInJvbGUiOiJidXllciIsImlhdCI6MTc0MDg5MzY3NSwiZXhwIjoxNzQzNDg1Njc1fQ.bumajb8RKpNiHRL1-lAyPpNRO0VSS2uuwBbmzyQC8rY"
+B
+{
+  "name": "Hari Bahadur",
+  "email": "hari@example.com",
+  "password": "hari@123",
+  "role": "user"
+}
+
+user B token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzU3YTNhNDg5ZmU2Y2Y1MjZkMDJhYiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQxMDE2ODAyLCJleHAiOjE3NDM2MDg4MDJ9.WC6ez9PxbnpBDoK9_HGfXYShq2Wa4-EWVPt4ltsBURo
 
 
+Admin details
 
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzNkZjc5MDQxZDA0MzBhNzIyZmY5MiIsInJvbGUiOiJidXllciIsImlhdCI6MTc0MDg5MzgwMSwiZXhwIjoxNzQzNDg1ODAxfQ.Fq3LBJEr72mmgiQK5pRjULt5Bxn3DdiiwjI4rlI2so0"
+{
+  "name": "Admin Bahadur",
+  "email": "haryy@example.com",
+  "password": "Ram@123",
+  "role": "admin"
+}
+
+
+output:
+{
+    "message": "User registered successfully. Please login to continue.",
+    "user": {
+        "_id": "67c5cfc4710b8637561553eb",
+        "name": "Admin Bahadur",
+        "email": "haryy@example.com",
+        "role": "admin"
+    }
+}
+
+
 
 
 
@@ -219,6 +252,81 @@ user registering land
         "_id": "67c3f865041d0430a722ffac",
         "createdAt": "2025-03-02T06:19:17.157Z",
         "updatedAt": "2025-03-02T06:19:17.157Z",
+        "__v": 0
+    }
+}
+
+
+
+
+Error in buyLand: User validation failed: role: `buyer` is not a valid enum value for path `role`.
+Error in buyLand: User validation failed: role: `buyer` is not a valid enum value for path `role`.
+
+
+Approval of the land that is given by PERSON a
+
+{
+    "message": "Land approved successfully",
+    "land": {
+        "area": {
+            "value": 3,
+            "unit": "ropani",
+            "converted": 1526.16
+        },
+        "location": {
+            "province": "Bagmati",
+            "district": "Bhaktapur",
+            "municipality": "Bhaktapur Municipality",
+            "ward": "8"
+        },
+        "gps_coordinates": {
+            "latitude": 27.6733,
+            "longitude": 85.4283
+        },
+        "_id": "67c5ce8d710b8637561553e7",
+        "owner": "67c3df79041d0430a722ff92",
+        "documents": "industrial-doc.pdf",
+        "status": "Approved",
+        "price": 30000000,
+        "isForSale": false,
+        "buyer": null,
+        "transactionStatus": "Available",
+        "createdAt": "2025-03-03T15:45:17.035Z",
+        "updatedAt": "2025-03-03T15:53:59.875Z",
+        "__v": 0
+    }
+}
+
+land for sale initiated by PERSON A(OWNER)
+
+{
+    "message": "Land listed for sale successfully",
+    "land": {
+        "area": {
+            "value": 3,
+            "unit": "ropani",
+            "converted": 1526.16
+        },
+        "location": {
+            "province": "Bagmati",
+            "district": "Bhaktapur",
+            "municipality": "Bhaktapur Municipality",
+            "ward": "8"
+        },
+        "gps_coordinates": {
+            "latitude": 27.6733,
+            "longitude": 85.4283
+        },
+        "_id": "67c5ce8d710b8637561553e7",
+        "owner": "67c3df79041d0430a722ff92",
+        "documents": "industrial-doc.pdf",
+        "status": "For Sale",
+        "price": 30000000,
+        "isForSale": true,
+        "buyer": null,
+        "transactionStatus": "Pending Sale",
+        "createdAt": "2025-03-03T15:45:17.035Z",
+        "updatedAt": "2025-03-03T15:55:44.617Z",
         "__v": 0
     }
 }

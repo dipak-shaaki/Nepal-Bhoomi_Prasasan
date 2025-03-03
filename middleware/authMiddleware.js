@@ -33,5 +33,6 @@ const isAuthorized = (req, res, next) => {
   next();
 };
 
-module.exports = protect; // Ensure only `protect` is exported as default
+module.exports = { protect, isAuthorized }; // ✅ Export everything properly
+// Ensure only `protect` is exported as default
 

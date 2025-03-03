@@ -1,8 +1,9 @@
 // controllers/landController.js
+
 const Land = require('../models/landModel');
 const convertToSquareMeter = require('../utils/convertToSqMeters');
 const { calculateTax } = require('../utils/taxCalculator');
-
+const User = require('../models/userModel'); // Import the User model
 
 // @desc Register new land (Requires Admin Approval)
 // @route POST /api/land/register
@@ -29,7 +30,7 @@ const registerLand = async (req, res) => {
         return res.status(400).json({ message: 'This land is already registered' });
       }
     }
-    
+
 
     // Create new land entry
     const land = new Land({
@@ -46,7 +47,7 @@ const registerLand = async (req, res) => {
       documents,
       status: 'Pending', // Admin needs to approve
     });
-    
+
     await land.save();
     res.status(201).json({ message: 'Land registered successfully, pending approval', land });
   } catch (error) {
@@ -66,13 +67,13 @@ const approveLand = async (req, res) => {
     }
 
     // Check if the user is an admin
-   // Check if the user is an admin
-   if (req.user.role !== 'admin' && req.user.role !== 'government') {
-    return res.status(403).json({ message: 'Unauthorized action: Only admins/government officials can approve land' });
-  }
+    // Check if the user is an admin
+    if (req.user.role !== 'admin' && req.user.role !== 'government') {
+      return res.status(403).json({ message: 'Unauthorized action: Only admins/government officials can approve land' });
+    }
 
-  land.status = 'Approved';
-  await land.save();
+    land.status = 'Approved';
+    await land.save();
 
 
     res.status(200).json({ message: "Land approved successfully", land });
@@ -153,8 +154,14 @@ const sellLand = async (req, res) => {
       return res.status(403).json({ message: 'You can only sell your own land' });
     }
 
+    // ✅ Ensure land is approved before selling
+    if (land.status !== 'Approved') {
+      return res.status(400).json({ message: 'Land must be approved before selling' });
+    }
+
     land.isForSale = true;
     land.status = 'For Sale';
+    land.transactionStatus = 'Pending Sale'; // ✅ Update transaction status
     await land.save();
 
     res.status(200).json({ message: 'Land listed for sale successfully', land });
@@ -162,37 +169,46 @@ const sellLand = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // @desc Buy land
 // @route PUT /api/land/buy/:id
 // @access Private (Only Authenticated Users)
 const buyLand = async (req, res) => {
   try {
     const land = await Land.findById(req.params.id).populate('owner');
-    const buyer = await User.findById(req.user.id);
+    if (!land) {
+      return res.status(404).json({ message: 'Land not found' });
+    }
 
-    if (!land || !buyer) {
-      return res.status(404).json({ message: 'Land or Buyer not found' });
+    const buyer = await User.findById(req.user.id);
+    const seller = await User.findById(land.owner);
+
+    if (!buyer || !seller) {
+      return res.status(404).json({ message: 'Buyer or Seller not found' });
     }
 
     if (!land.isForSale) {
       return res.status(400).json({ message: 'Land is not for sale' });
     }
 
-    if (land.owner._id.toString() === buyer._id.toString()) {
+    if (land.owner.toString() === buyer._id.toString()) {
       return res.status(403).json({ message: 'You cannot buy your own land' });
     }
 
-    // Calculate tax
+    // ✅ Calculate tax and total cost
     const taxAmount = calculateTax(land.price);
     const totalCost = land.price + taxAmount;
 
+    // ✅ Ensure buyer has enough balance
     if (buyer.balance < totalCost) {
       return res.status(400).json({ message: 'Insufficient funds' });
     }
 
-    // Deduct balance & transfer ownership
+    // ✅ Deduct amount from buyer and add to seller
     buyer.balance -= totalCost;
-    seller.balance += land.price; 
+    seller.balance += land.price;
+
+    // ✅ Transfer ownership
     land.owner = buyer._id;
     land.status = 'Sold';
     land.isForSale = false;
@@ -201,7 +217,6 @@ const buyLand = async (req, res) => {
 
     await buyer.save();
     await seller.save();
-    // await land.owner.save();
     await land.save();
 
     res.status(200).json({
@@ -216,4 +231,5 @@ const buyLand = async (req, res) => {
 };
 
 
-module.exports = { registerLand, approveLand, requestLandEdit, approveLandEdit ,sellLand, buyLand}; 
+
+module.exports = { registerLand, approveLand, requestLandEdit, approveLandEdit, sellLand, buyLand }; 

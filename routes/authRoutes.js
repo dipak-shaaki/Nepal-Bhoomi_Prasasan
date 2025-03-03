@@ -5,7 +5,6 @@ const protect = require('../middleware/authMiddleware');
 
 router.post('/register', registerUser); // Register a new user
 router.post('/login', loginUser);// Login a user
-router.get('/profile', protect, getUserProfile); // Get user profile
-router.put('/switch-role', protect, switchRole); // Switch between buyer and seller
+// router.get('/profile', protect, getUserProfile); // Get user profile
 
 module.exports = router;

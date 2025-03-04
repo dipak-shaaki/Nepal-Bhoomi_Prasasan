@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'government', 'admin'],
     default: 'user', // Default role
   },
+  resetToken: { type: String },
+  resetTokenExpires: { type: Date },
 }, { timestamps: true });
 
 // Method to switch between Buyer & Seller

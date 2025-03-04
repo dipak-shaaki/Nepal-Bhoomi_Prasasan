@@ -1,7 +1,7 @@
 // routes/landRoutes.js
 const express = require('express');
 const router = express.Router();
-const { registerLand, approveLand, requestLandEdit, approveLandEdit,sellLand, buyLand } = require('../controllers/landController');
+const { registerLand, approveLand, editLand,sellLand, buyLand } = require('../controllers/landController');
 const { protect, isAuthorized } = require('../middleware/authMiddleware'); // ✅ Fix import
 
 
@@ -13,10 +13,8 @@ router.post('/register', protect, registerLand);
 router.put('/approve/:id', protect, approveLand); //isAuthorized not used
 
 // Request land edit (Only owner)
-router.put('/edit/:id', protect, requestLandEdit);
+router.put('/edit/:id', protect, editLand);
 
-// Approve land edit (Only Admin)
-router.put('/edit/approve/:id', protect, approveLandEdit);//isAuthorized not used
 
 // Sell land
 router.put('/sell/:id', protect, sellLand);

@@ -86,7 +86,8 @@ const approveLand = async (req, res) => {
 // @desc Request Land Edit (User Request)
 // @route PUT /api/land/edit/:id
 // @access Private (Only Users)
-const requestLandEdit = async (req, res) => {
+
+const editLand = async (req, res) => {
   try {
     const { updates } = req.body;
     const land = await Land.findById(req.params.id);
@@ -95,48 +96,36 @@ const requestLandEdit = async (req, res) => {
       return res.status(404).json({ message: 'Land not found' });
     }
 
+    // ✅ Ensure only the landowner can edit
     if (land.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'You are not the owner of this land' });
     }
 
-    land.editRequest = true;
-    land.editedDetails = updates;
+    // ✅ Apply only the fields that are updated, keep existing values for other fields
+    land.price = updates.price ?? land.price;
+    land.location = {
+      province: updates.location?.province ?? land.location.province,
+      district: updates.location?.district ?? land.location.district,
+      municipality: updates.location?.municipality ?? land.location.municipality,
+      ward: updates.location?.ward ?? land.location.ward,
+    };
+    land.gps_coordinates = {
+      latitude: updates.gps_coordinates?.latitude ?? land.gps_coordinates.latitude,
+      longitude: updates.gps_coordinates?.longitude ?? land.gps_coordinates.longitude,
+    };
+
     await land.save();
 
-    res.status(200).json({ message: 'Edit request sent to admin', land });
+    res.status(200).json({ message: 'Land updated successfully', land });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 // @desc Approve Land Edit (Admin/Govt)
 // @route PUT /api/land/edit/approve/:id
 // @access Private (Only Admins)
-const approveLandEdit = async (req, res) => {
-  try {
-    const land = await Land.findById(req.params.id);
-
-    if (!land) {
-      return res.status(404).json({ message: 'Land not found' });
-    }
-
-    if (req.user.role !== 'government') {
-      return res.status(403).json({ message: 'Unauthorized action' });
-    }
-
-    land.area = land.editedDetails.area || land.area;
-    land.location = land.editedDetails.location || land.location;
-    land.gps_coordinates = land.editedDetails.gps_coordinates || land.gps_coordinates;
-    land.price = land.editedDetails.price || land.price;
-    land.editedDetails = null;
-    land.editRequest = false;
-
-    await land.save();
-    res.status(200).json({ message: 'Land edit approved', land });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
 
 
 // @desc List land for sale
@@ -154,14 +143,8 @@ const sellLand = async (req, res) => {
       return res.status(403).json({ message: 'You can only sell your own land' });
     }
 
-    // ✅ Ensure land is approved before selling
-    if (land.status !== 'Approved') {
-      return res.status(400).json({ message: 'Land must be approved before selling' });
-    }
-
     land.isForSale = true;
     land.status = 'For Sale';
-    land.transactionStatus = 'Pending Sale'; // ✅ Update transaction status
     await land.save();
 
     res.status(200).json({ message: 'Land listed for sale successfully', land });
@@ -169,17 +152,18 @@ const sellLand = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // @desc Buy land
 // @route PUT /api/land/buy/:id
 // @access Private (Only Authenticated Users)
 const buyLand = async (req, res) => {
   try {
-    const land = await Land.findById(req.params.id).populate('owner');
+    // ✅ Fetch the land
+    const land = await Land.findById(req.params.id);
     if (!land) {
       return res.status(404).json({ message: 'Land not found' });
     }
 
+    // ✅ Fetch the buyer and seller
     const buyer = await User.findById(req.user.id);
     const seller = await User.findById(land.owner);
 
@@ -195,20 +179,21 @@ const buyLand = async (req, res) => {
       return res.status(403).json({ message: 'You cannot buy your own land' });
     }
 
-    // ✅ Calculate tax and total cost
+    // ✅ Ensure buyer role is NOT modified
+    console.log("Buyer Role Before:", buyer.role);
+
+    // ✅ Calculate tax
     const taxAmount = calculateTax(land.price);
     const totalCost = land.price + taxAmount;
 
-    // ✅ Ensure buyer has enough balance
     if (buyer.balance < totalCost) {
       return res.status(400).json({ message: 'Insufficient funds' });
     }
 
-    // ✅ Deduct amount from buyer and add to seller
+    // ✅ Deduct balance & transfer ownership
     buyer.balance -= totalCost;
     seller.balance += land.price;
 
-    // ✅ Transfer ownership
     land.owner = buyer._id;
     land.status = 'Sold';
     land.isForSale = false;
@@ -219,6 +204,10 @@ const buyLand = async (req, res) => {
     await seller.save();
     await land.save();
 
+
+    console.log("Buyer Role After:", buyer.role); // ✅ Ensure role is unchanged
+
+
     res.status(200).json({
       message: 'Land purchased successfully',
       land,
@@ -226,10 +215,10 @@ const buyLand = async (req, res) => {
       finalAmountPaid: totalCost,
     });
   } catch (error) {
+    console.error('Error in buyLand:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
 
-
-module.exports = { registerLand, approveLand, requestLandEdit, approveLandEdit, sellLand, buyLand }; 
+module.exports = { registerLand, approveLand, editLand, sellLand, buyLand }; 

@@ -23,16 +23,16 @@ const registerUser = async (req, res) => {
 
     // Create new user
     const user = await User.create({ name, email, password, role: assignedRole });
-    
+
     if (user) {
       res.status(201).json({
-      message: 'User registered successfully. Please login to continue.',
-      user: {
-        _id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+        message: 'User registered successfully. Please login to continue.',
+        user: {
+          _id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        }
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -70,43 +70,48 @@ const loginUser = async (req, res) => {
 // @access Private
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (user) {
-      res.status(200).json(user);
-    } else {
-      res.status(404).json({ message: 'User not found' });
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
 
-const switchRole = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    
+    const user = await User.findById(req.user.id).select('-password');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
-    // Only buyers and sellers can switch roles
-    if (user.role === 'government' || user.role === 'admin') {
-      return res.status(403).json({ message: 'Admins/Government officials cannot switch roles' });
-    }
 
-    // @desc Switch between buyer and seller roles
-// @route PUT /api/auth/switch-role
-// @access Private (Only Buyer/Seller)
-
-    // Switch role
-    user.switchRole();
-    await user.save();
-
-    res.status(200).json({ message: `Role switched to ${user.role}`, role: user.role });
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+// const switchRole = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id);
+
+//     if (!user) {
+//       return res.status(404).json({ message: 'User not found' });
+//     }
+
+//     // Only buyers and sellers can switch roles
+//     if (user.role === 'government' || user.role === 'admin') {
+//       return res.status(403).json({ message: 'Admins/Government officials cannot switch roles' });
+//     }
+
+//     // @desc Switch between buyer and seller roles
+//     // @route PUT /api/auth/switch-role
+//     // @access Private (Only Buyer/Seller)
+
+//     // Switch role
+//     user.switchRole();
+//     await user.save();
+
+//     res.status(200).json({ message: `Role switched to ${user.role}`, role: user.role });
+//   } catch (error) {
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
 
 
 // @desc Request Password Reset
@@ -140,11 +145,12 @@ const requestPasswordReset = async (req, res) => {
 // @desc Reset Password (Using Token)
 // @route PUT /api/auth/reset-password/:token
 // @access Public
+
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { newPassword } = req.body;
-    
+
     const user = await User.findOne({
       resetToken: token,
       resetTokenExpires: { $gt: Date.now() }, // Ensure token is valid
@@ -169,4 +175,4 @@ const resetPassword = async (req, res) => {
 
 
 
-module.exports = { registerUser, loginUser, getUserProfile, switchRole , requestPasswordReset, resetPassword};
+module.exports = { registerUser, loginUser, getUserProfile, requestPasswordReset, resetPassword };

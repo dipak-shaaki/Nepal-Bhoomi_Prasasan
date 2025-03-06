@@ -201,6 +201,9 @@ new role
   "role": "user"
 }
 
+\end{code}
+  
+
 
 user B token:
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzU3YTNhNDg5ZmU2Y2Y1MjZkMDJhYiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQxMDE2ODAyLCJleHAiOjE3NDM2MDg4MDJ9.WC6ez9PxbnpBDoK9_HGfXYShq2Wa4-EWVPt4ltsBURo

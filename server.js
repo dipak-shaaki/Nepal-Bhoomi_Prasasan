@@ -19,7 +19,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/land', landRoutes);
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true })); // Allow frontend requests
 
 // Start Server
 const PORT = process.env.PORT || 5000;

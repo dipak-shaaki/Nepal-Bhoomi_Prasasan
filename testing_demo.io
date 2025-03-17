@@ -275,7 +275,7 @@ Edit
 🛠 Final Debugging Checklist
 ✅ Make sure land ownership changes after purchase.
 ✅ Ensure old owner cannot buy back their own land.
-✅ Verify balance updates correctly after transactions.
+✅ Verify balance updates correctly after transacctions.
 ✅ Check tax deduction in buying process.
 ✅ Ensure users can reset passwords successfully.
 
